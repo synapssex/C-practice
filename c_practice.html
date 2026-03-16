@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C Programming Practice</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f; --surface: #111118; --card: #16161f; --border: #2a2a3a;
+    --accent: #00e5ff; --accent2: #ff6b35; --accent3: #a8ff3e;
+    --text: #e8e8f0; --muted: #6a6a80; --code-bg: #0d0d14;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; }
+  header { background:linear-gradient(135deg,#0d0d14 0%,#1a0a2e 100%); border-bottom:1px solid var(--border); padding:2rem 2rem 1.5rem; position:sticky; top:0; z-index:100; }
+  header h1 { font-family:'Bebas Neue',sans-serif; font-size:clamp(2rem,5vw,3.5rem); letter-spacing:3px; color:var(--accent); text-shadow:0 0 30px rgba(0,229,255,0.4); }
+  header p { color:var(--muted); font-size:0.9rem; margin-top:0.2rem; }
+  .filter-bar { display:flex; flex-wrap:wrap; gap:0.5rem; padding:1rem 2rem; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:96px; z-index:99; }
+  .filter-btn { background:var(--card); border:1px solid var(--border); color:var(--muted); padding:0.3rem 0.9rem; border-radius:20px; cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:0.75rem; transition:all 0.2s; }
+  .filter-btn:hover,.filter-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(0,229,255,0.07); }
+  main { max-width:1000px; margin:0 auto; padding:2rem; }
+  .section-title { font-family:'Bebas Neue',sans-serif; font-size:1.8rem; letter-spacing:2px; color:var(--accent2); margin:2.5rem 0 1rem; display:flex; align-items:center; gap:0.8rem; }
+  .section-title::after { content:''; flex:1; height:1px; background:linear-gradient(to right,var(--accent2),transparent); }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:10px; margin-bottom:1.2rem; overflow:hidden; transition:border-color 0.2s,transform 0.2s; }
+  .card:hover { border-color:var(--accent); transform:translateY(-1px); }
+  .card-header { padding:1rem 1.2rem; display:flex; justify-content:space-between; align-items:flex-start; cursor:pointer; gap:1rem; }
+  .q-meta { display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; }
+  .q-num { font-family:'Bebas Neue',sans-serif; font-size:1.1rem; color:var(--accent); min-width:32px; }
+  .q-title { font-weight:600; font-size:0.95rem; color:var(--text); }
+  .tag { font-family:'JetBrains Mono',monospace; font-size:0.65rem; padding:0.15rem 0.5rem; border-radius:3px; border:1px solid; }
+  .tag-type { border-color:#4a6fa5; color:#7db3ff; background:rgba(74,111,165,0.1); }
+  .tag-diff-easy { border-color:#2d6a4f; color:var(--accent3); background:rgba(168,255,62,0.07); }
+  .tag-diff-med  { border-color:#8b5e00; color:#ffc947; background:rgba(255,165,0,0.07); }
+  .tag-diff-hard { border-color:#6b1c1c; color:#ff6b6b; background:rgba(255,107,107,0.07); }
+  .toggle-icon { color:var(--muted); font-size:1.2rem; transition:transform 0.3s; min-width:20px; text-align:center; }
+  .card.open .toggle-icon { transform:rotate(180deg); }
+  .card-body { display:none; border-top:1px solid var(--border); }
+  .card.open .card-body { display:block; }
+  .problem-desc { padding:1rem 1.2rem 0.5rem; font-size:0.95rem; line-height:1.8; color:#cccce0; }
+  .io-section { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; padding:0.5rem 1.2rem 0.8rem; }
+  @media(max-width:500px){.io-section{grid-template-columns:1fr;}}
+  .io-box h4 { font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:0.3rem; }
+  .io-box pre { background:var(--code-bg); border:1px solid var(--border); border-radius:6px; padding:0.6rem 0.8rem; font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:var(--accent3); white-space:pre-wrap; }
+  .hint-btn { margin:0 1.2rem 0.5rem; background:none; border:1px dashed var(--border); color:var(--muted); padding:0.3rem 0.8rem; border-radius:5px; cursor:pointer; font-size:0.8rem; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+  .hint-btn:hover { border-color:var(--accent2); color:var(--accent2); }
+  .hint-box { display:none; margin:0 1.2rem 0.8rem; background:rgba(255,107,53,0.06); border-left:3px solid var(--accent2); border-radius:0 6px 6px 0; padding:0.7rem 1rem; font-size:0.85rem; color:#d0a090; line-height:1.7; }
+  .hint-box.show { display:block; }
+  .solution-btn { margin:0 1.2rem 1rem; background:none; border:1px solid var(--border); color:var(--muted); padding:0.35rem 0.9rem; border-radius:5px; cursor:pointer; font-size:0.8rem; font-family:'JetBrains Mono',monospace; transition:all 0.2s; }
+  .solution-btn:hover { border-color:var(--accent3); color:var(--accent3); }
+  .solution-box { display:none; margin:0 1.2rem 1rem; background:var(--code-bg); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .solution-box.show { display:block; }
+  .sol-header { background:#1a1a28; padding:0.4rem 0.8rem; font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--muted); border-bottom:1px solid var(--border); }
+  .solution-box pre { padding:1rem; font-family:'JetBrains Mono',monospace; font-size:0.8rem; line-height:1.6; color:#c8d8f0; white-space:pre; overflow-x:auto; }
+  .kw{color:#ff79c6;} .fn{color:#50fa7b;} .str{color:#f1fa8c;} .num{color:#bd93f9;} .type{color:#8be9fd;} .cm{color:#6272a4;}
+  .checker-wrap { margin:0 1.2rem 1.2rem; border:1px solid #2a2a3a; border-radius:8px; overflow:hidden; background:var(--code-bg); }
+  .checker-header { background:#1a1a28; padding:0.4rem 0.8rem; display:flex; align-items:center; border-bottom:1px solid var(--border); }
+  .checker-header span { font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--muted); }
+  .checker-textarea { width:100%; min-height:130px; background:transparent; border:none; outline:none; padding:0.8rem 1rem; font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:#c8d8f0; resize:vertical; line-height:1.6; }
+  .checker-textarea::placeholder { color:#3a3a55; }
+  .checker-footer { display:flex; align-items:center; gap:0.7rem; padding:0.5rem 0.8rem; border-top:1px solid var(--border); background:#13131e; }
+  .check-btn { background:var(--accent); color:var(--bg); border:none; padding:0.35rem 1rem; border-radius:5px; font-family:'JetBrains Mono',monospace; font-size:0.78rem; font-weight:700; cursor:pointer; transition:opacity 0.2s,transform 0.1s; }
+  .check-btn:hover{opacity:0.85;} .check-btn:active{transform:scale(0.97);} .check-btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .clear-btn { background:none; border:1px solid var(--border); color:var(--muted); padding:0.3rem 0.7rem; border-radius:5px; font-size:0.75rem; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+  .clear-btn:hover{border-color:#555;color:var(--text);}
+  .check-result { display:none; margin:0 1.2rem 1.2rem; border-radius:8px; padding:0.9rem 1.1rem; font-size:0.88rem; line-height:1.6; animation:fadeIn 0.3s ease; }
+  @keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+  .check-result.show{display:block;}
+  .check-result.good{background:rgba(168,255,62,0.07);border:1px solid #3d6b1a;color:#a8ff3e;}
+  .check-result.bad{background:rgba(255,80,80,0.07);border:1px solid #6b1c1c;color:#ff8080;}
+  .check-result.loading{background:rgba(0,229,255,0.05);border:1px solid #1a4a55;color:var(--muted);}
+  .result-title{font-weight:700;font-size:1rem;margin-bottom:0.3rem;display:flex;align-items:center;gap:0.4rem;}
+  .result-detail{font-size:0.82rem;opacity:0.85;white-space:pre-wrap;}
+  #count-badge{background:var(--accent);color:var(--bg);border-radius:20px;padding:0.1rem 0.6rem;font-size:0.75rem;font-weight:700;margin-left:0.5rem;}
+</style>
+</head>
+<body>
+<header>
+  <h1>C PROGRAMMING PRACTICE</h1>
+  <p>Click a question to open it · Use the hint if you're stuck · Check your code at the bottom</p>
+</header>
+<div class="filter-bar">
+  <button class="filter-btn active" onclick="filter('all',event)">All <span id="count-badge">40</span></button>
+  <button class="filter-btn" onclick="filter('io',event)">I/O</button>
+  <button class="filter-btn" onclick="filter('math',event)">Math</button>
+  <button class="filter-btn" onclick="filter('if',event)">if / if-else</button>
+  <button class="filter-btn" onclick="filter('switch',event)">switch</button>
+  <button class="filter-btn" onclick="filter('while',event)">while</button>
+  <button class="filter-btn" onclick="filter('dowhile',event)">do-while</button>
+  <button class="filter-btn" onclick="filter('for',event)">for</button>
+  <button class="filter-btn" onclick="filter('pattern',event)">patterns</button>
+  <button class="filter-btn" onclick="filter('array1d',event)">1D array</button>
+  <button class="filter-btn" onclick="filter('array2d',event)">2D array</button>
+  <button class="filter-btn" onclick="filter('struct',event)">struct</button>
+  <button class="filter-btn" onclick="filter('func',event)">functions</button>
+</div>
+<main id="main"></main>
+<script>
+const Q = [
+  // INPUT / OUTPUT
+  { cat:'io', title:'Print Your Name and Age', diff:'easy',
+    desc:'Ask the user to type their first name and their age. Then print a sentence using both.',
+    input:'Alice\n25', output:'Hello, Alice! You are 25 years old.',
+    hint:'Declare char name[50] for the name and int age for the number.\nscaf("%s", name) reads the name — no & needed for arrays.\nscanf("%d", &age) reads the number.\nThen use printf to build the sentence.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">char</span> name[<span class="num">50</span>];
+    <span class="type">int</span> age;
+    <span class="fn">scanf</span>(<span class="str">"%s %d"</span>, name, &amp;age);
+    <span class="fn">printf</span>(<span class="str">"Hello, %s! You are %d years old.\\n"</span>, name, age);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'io', title:'Price and Grade', diff:'easy',
+    desc:'Ask the user for a price (a decimal number like 19.99) and a grade letter (like A or B).\nPrint the price with a $ sign and 2 decimal places.\nThen print the grade on the next line.',
+    input:'19.99\nA', output:'Price: $19.99\nGrade: A',
+    hint:'Use float for the price and char for the letter.\n%f reads a decimal. %c reads one character.\nIn printf, use %.2f to always show 2 decimal places.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">float</span> price;
+    <span class="type">char</span> grade;
+    <span class="fn">scanf</span>(<span class="str">"%f %c"</span>, &amp;price, &amp;grade);
+    <span class="fn">printf</span>(<span class="str">"Price: $%.2f\\nGrade: %c\\n"</span>, price, grade);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  // MATH
+  { cat:'math', title:'Add, Subtract, Multiply, Divide', diff:'easy',
+    desc:'Ask the user for two whole numbers.\nPrint their sum, difference, product, and the result of dividing the first by the second (show 2 decimal places).',
+    input:'10 3', output:'Sum: 13\nDifference: 7\nProduct: 30\nDivision: 3.33',
+    hint:'Declare both numbers as int.\nFor division, write (float)a / b — this turns the result into a decimal so you do not lose the fraction.\nUse %.2f to print 2 decimal places.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> a, b;
+    <span class="fn">scanf</span>(<span class="str">"%d %d"</span>, &amp;a, &amp;b);
+    <span class="fn">printf</span>(<span class="str">"Sum: %d\\nDifference: %d\\nProduct: %d\\nDivision: %.2f\\n"</span>,
+           a+b, a-b, a*b, (<span class="type">float</span>)a/b);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'math', title:'Circle Area and Circumference', diff:'easy',
+    desc:'Ask the user for the radius of a circle (a decimal number).\nCalculate and print the area and the circumference. Use 3.14159 for pi.\n\nArea = pi x r x r\nCircumference = 2 x pi x r',
+    input:'7.0', output:'Area: 153.94\nCircumference: 43.98',
+    hint:'Use double for the radius. Store double pi = 3.14159.\nUse %lf to read a double with scanf.\nUse %.2lf to print with 2 decimal places.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">double</span> r, pi = <span class="num">3.14159</span>;
+    <span class="fn">scanf</span>(<span class="str">"%lf"</span>, &amp;r);
+    <span class="fn">printf</span>(<span class="str">"Area: %.2lf\\nCircumference: %.2lf\\n"</span>, pi*r*r, <span class="num">2</span>*pi*r);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'math', title:'Celsius to Fahrenheit', diff:'easy',
+    desc:'Ask the user for a temperature in Celsius. Convert it to Fahrenheit and print the answer.\n\nFormula:  F = (C x 9 / 5) + 32',
+    input:'100.0', output:'Fahrenheit: 212.00',
+    hint:'Write 9.0/5.0 not 9/5.\nWhen both numbers are whole, C removes the decimal and gives the wrong answer.\nWriting 9.0 forces C to keep the decimal part.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">float</span> c;
+    <span class="fn">scanf</span>(<span class="str">"%f"</span>, &amp;c);
+    <span class="fn">printf</span>(<span class="str">"Fahrenheit: %.2f\\n"</span>, (c * <span class="num">9.0f</span> / <span class="num">5.0f</span>) + <span class="num">32</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  // IF / IF-ELSE
+  { cat:'if', title:'Positive, Negative or Zero', diff:'easy',
+    desc:'Ask the user for a whole number.\nPrint "Positive" if it is above 0.\nPrint "Negative" if it is below 0.\nPrint "Zero" if it equals 0.',
+    input:'-7', output:'Negative',
+    hint:'Use if / else if / else.\nCheck n > 0 first, then n < 0. The final else catches zero automatically — you do not need to check == 0.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n; <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+    <span class="kw">if</span> (n > <span class="num">0</span>)       <span class="fn">printf</span>(<span class="str">"Positive\\n"</span>);
+    <span class="kw">else if</span> (n < <span class="num">0</span>) <span class="fn">printf</span>(<span class="str">"Negative\\n"</span>);
+    <span class="kw">else</span>            <span class="fn">printf</span>(<span class="str">"Zero\\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'if', title:'Pass or Fail', diff:'easy',
+    desc:'Ask the user for a student mark (0 to 100).\nIf the mark is 50 or above, print "Pass".\nIf it is below 50, print "Fail".',
+    input:'72', output:'Pass',
+    hint:'Simple if / else. The condition to check is: mark >= 50.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> mark; <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;mark);
+    <span class="kw">if</span> (mark >= <span class="num">50</span>) <span class="fn">printf</span>(<span class="str">"Pass\\n"</span>);
+    <span class="kw">else</span>             <span class="fn">printf</span>(<span class="str">"Fail\\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'if', title:'Biggest of Three Numbers', diff:'easy',
+    desc:'Ask the user to enter 3 decimal numbers. Find and print the biggest one.',
+    input:'4.5 9.1 3.3', output:'Largest: 9.10',
+    hint:'Start by saying max = a (assume a is biggest).\nThen: if b > max, update max = b.\nThen: if c > max, update max = c.\nAt the end, max holds the answer.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">float</span> a, b, c, max;
+    <span class="fn">scanf</span>(<span class="str">"%f %f %f"</span>, &amp;a, &amp;b, &amp;c);
+    max = a;
+    <span class="kw">if</span> (b > max) max = b;
+    <span class="kw">if</span> (c > max) max = c;
+    <span class="fn">printf</span>(<span class="str">"Largest: %.2f\\n"</span>, max);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'if', title:'Vowel or Consonant', diff:'easy',
+    desc:'Ask the user to type one lowercase letter.\nPrint "Vowel" if it is a, e, i, o, or u.\nPrint "Consonant" for any other letter.',
+    input:'e', output:'Vowel',
+    hint:'Use if and check each vowel with == and || between them.\nExample: if (c == \'a\' || c == \'e\' || c == \'i\' || c == \'o\' || c == \'u\')',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">char</span> c; <span class="fn">scanf</span>(<span class="str">"%c"</span>, &amp;c);
+    <span class="kw">if</span>(c==<span class="str">'a'</span>||c==<span class="str">'e'</span>||c==<span class="str">'i'</span>||c==<span class="str">'o'</span>||c==<span class="str">'u'</span>)
+        <span class="fn">printf</span>(<span class="str">"Vowel\\n"</span>);
+    <span class="kw">else</span> <span class="fn">printf</span>(<span class="str">"Consonant\\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  // SWITCH
+  { cat:'switch', title:'Day of the Week', diff:'easy',
+    desc:'Ask the user to enter a number from 1 to 7.\nPrint the name of that day.\n1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday, 7=Sunday.\nIf they type anything else, print "Invalid".',
+    input:'3', output:'Wednesday',
+    hint:'Use switch(n). Write a case for each number 1 to 7.\nAlways put break; after each case or the code will fall through to the next one.\nUse default: for any number outside 1 to 7.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n; <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+    <span class="kw">switch</span>(n) {
+        <span class="kw">case</span> <span class="num">1</span>: <span class="fn">printf</span>(<span class="str">"Monday\\n"</span>);    <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">2</span>: <span class="fn">printf</span>(<span class="str">"Tuesday\\n"</span>);   <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">3</span>: <span class="fn">printf</span>(<span class="str">"Wednesday\\n"</span>); <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">4</span>: <span class="fn">printf</span>(<span class="str">"Thursday\\n"</span>);  <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">5</span>: <span class="fn">printf</span>(<span class="str">"Friday\\n"</span>);    <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">6</span>: <span class="fn">printf</span>(<span class="str">"Saturday\\n"</span>);  <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">7</span>: <span class="fn">printf</span>(<span class="str">"Sunday\\n"</span>);    <span class="kw">break</span>;
+        <span class="kw">default</span>: <span class="fn">printf</span>(<span class="str">"Invalid\\n"</span>);
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'switch', title:'Simple Calculator', diff:'med',
+    desc:'Ask the user for two numbers and a math symbol (+, -, *, /).\nDo the calculation and print the answer.\nIf the user tries to divide by zero, print "Cannot divide by zero".',
+    input:'10.0 / 4.0', output:'Result: 2.50',
+    hint:'Use switch on the operator character (char op).\nEach case handles one symbol.\nFor division, add an if inside to check if the second number equals 0 before dividing.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">double</span> a, b; <span class="type">char</span> op;
+    <span class="fn">scanf</span>(<span class="str">"%lf %c %lf"</span>, &amp;a, &amp;op, &amp;b);
+    <span class="kw">switch</span>(op) {
+        <span class="kw">case</span> <span class="str">'+'</span>: <span class="fn">printf</span>(<span class="str">"Result: %.2lf\\n"</span>, a+b); <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="str">'-'</span>: <span class="fn">printf</span>(<span class="str">"Result: %.2lf\\n"</span>, a-b); <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="str">'*'</span>: <span class="fn">printf</span>(<span class="str">"Result: %.2lf\\n"</span>, a*b); <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="str">'/'</span>:
+            <span class="kw">if</span>(b==<span class="num">0</span>) <span class="fn">printf</span>(<span class="str">"Cannot divide by zero\\n"</span>);
+            <span class="kw">else</span> <span class="fn">printf</span>(<span class="str">"Result: %.2lf\\n"</span>, a/b);
+            <span class="kw">break</span>;
+        <span class="kw">default</span>: <span class="fn">printf</span>(<span class="str">"Unknown operator\\n"</span>);
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'switch', title:'What Season Is It?', diff:'easy',
+    desc:'Ask the user for a month number (1 to 12). Print the season.\nDec, Jan, Feb = Winter\nMar, Apr, May = Spring\nJun, Jul, Aug = Summer\nSep, Oct, Nov = Autumn\nAnything else = Invalid',
+    input:'7', output:'Summer',
+    hint:'Multiple case labels can share one action — just stack them on top of each other before the printf.\nExample: case 12: case 1: case 2: printf("Winter"); break;',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> m; <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;m);
+    <span class="kw">switch</span>(m) {
+        <span class="kw">case</span> <span class="num">12</span>:<span class="kw">case</span> <span class="num">1</span>:<span class="kw">case</span> <span class="num">2</span>:  <span class="fn">printf</span>(<span class="str">"Winter\\n"</span>); <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">3</span>:<span class="kw">case</span> <span class="num">4</span>:<span class="kw">case</span> <span class="num">5</span>:   <span class="fn">printf</span>(<span class="str">"Spring\\n"</span>); <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">6</span>:<span class="kw">case</span> <span class="num">7</span>:<span class="kw">case</span> <span class="num">8</span>:   <span class="fn">printf</span>(<span class="str">"Summer\\n"</span>); <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">9</span>:<span class="kw">case</span> <span class="num">10</span>:<span class="kw">case</span> <span class="num">11</span>: <span class="fn">printf</span>(<span class="str">"Autumn\\n"</span>); <span class="kw">break</span>;
+        <span class="kw">default</span>: <span class="fn">printf</span>(<span class="str">"Invalid\\n"</span>);
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  // WHILE
+  { cat:'while', title:'Add Numbers Until Zero', diff:'easy',
+    desc:'Keep asking the user to enter numbers.\nStop when they type 0.\nAdd up all the numbers they entered (not the 0) and print the total.',
+    input:'3 7 -2 5 0', output:'Sum: 13',
+    hint:'Read the first number BEFORE the loop.\nWhile the number is not 0: add it to sum, then read the next number.\nThis way 0 is never added.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n, sum = <span class="num">0</span>;
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+    <span class="kw">while</span> (n != <span class="num">0</span>) {
+        sum += n;
+        <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+    }
+    <span class="fn">printf</span>(<span class="str">"Sum: %d\\n"</span>, sum);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'while', title:'Countdown to Go', diff:'easy',
+    desc:'Ask the user for a positive whole number.\nPrint every number from that number down to 1, then print "Go!" at the end.',
+    input:'5', output:'5 4 3 2 1 Go!',
+    hint:'Use a while loop. Each round: print n, then subtract 1 from n.\nThe loop stops when n reaches 0.\nAfter the loop, print Go!',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n; <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+    <span class="kw">while</span> (n > <span class="num">0</span>) { <span class="fn">printf</span>(<span class="str">"%d "</span>, n); n--; }
+    <span class="fn">printf</span>(<span class="str">"Go!\\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'while', title:'How Many Digits?', diff:'med',
+    desc:'Ask the user for a positive whole number.\nCount how many digits it has and print the count.\nFor example 48392 has 5 digits.',
+    input:'48392', output:'Digits: 5',
+    hint:'Divide the number by 10 over and over in a while loop until it becomes 0.\nCount how many times you divided — that is the number of digits.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n, count = <span class="num">0</span>;
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+    <span class="kw">if</span>(n==<span class="num">0</span>) count=<span class="num">1</span>;
+    <span class="kw">while</span>(n > <span class="num">0</span>) { n /= <span class="num">10</span>; count++; }
+    <span class="fn">printf</span>(<span class="str">"Digits: %d\\n"</span>, count);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  // DO-WHILE
+  { cat:'dowhile', title:'Guess the PIN', diff:'easy',
+    desc:'Ask the user to enter a PIN number.\nKeep asking until they type 1234.\nCount how many tries it took and print the result.',
+    input:'9999\n1111\n1234', output:'Access granted in 3 attempt(s)',
+    hint:'Use do-while so the program always asks at least once.\nEach loop: read the PIN, add 1 to count.\nThe loop keeps going while the PIN is not 1234.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> pin, count = <span class="num">0</span>;
+    <span class="kw">do</span> {
+        <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;pin);
+        count++;
+    } <span class="kw">while</span> (pin != <span class="num">1234</span>);
+    <span class="fn">printf</span>(<span class="str">"Access granted in %d attempt(s)\\n"</span>, count);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'dowhile', title:'Valid Age Checker', diff:'easy',
+    desc:'Keep asking the user to enter their age until they type a valid number (between 1 and 120).\nOnce they enter a valid age, print it.',
+    input:'0\n200\n25', output:'Your age is: 25',
+    hint:'Use do-while. The program must ask at least once.\nThe loop keeps going while the age is less than 1 OR greater than 120.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> age;
+    <span class="kw">do</span> {
+        <span class="fn">printf</span>(<span class="str">"Enter age (1-120): "</span>);
+        <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;age);
+    } <span class="kw">while</span> (age < <span class="num">1</span> || age > <span class="num">120</span>);
+    <span class="fn">printf</span>(<span class="str">"Your age is: %d\\n"</span>, age);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  // FOR
+  { cat:'for', title:'Multiplication Table', diff:'easy',
+    desc:'Ask the user for a number. Print its full multiplication table from 1 to 10.',
+    input:'7', output:'7 x 1 = 7\n7 x 2 = 14\n...\n7 x 10 = 70',
+    hint:'Use for(i = 1; i <= 10; i++).\nInside the loop, print: n x i = the answer.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n; <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">1</span>; i<=<span class="num">10</span>; i++)
+        <span class="fn">printf</span>(<span class="str">"%d x %d = %d\\n"</span>, n, i, n*i);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'for', title:'Sum from 1 to N', diff:'easy',
+    desc:'Ask the user for a number N. Add up every number from 1 to N and print the total.\nFor example if N is 5:  1 + 2 + 3 + 4 + 5 = 15',
+    input:'5', output:'Sum: 15',
+    hint:'Declare sum = 0 before the loop.\nUse for(i = 1; i <= n; i++) and do sum += i inside.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n, sum=<span class="num">0</span>; <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">1</span>; i<=n; i++) sum+=i;
+    <span class="fn">printf</span>(<span class="str">"Sum: %d\\n"</span>, sum);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'for', title:'Calculate Factorial', diff:'med',
+    desc:'Ask the user for a number N. Calculate N! (factorial) and print it.\nFactorial means multiplying all numbers from 1 up to N together.\nExample: 5! = 1 x 2 x 3 x 4 x 5 = 120',
+    input:'5', output:'5! = 120',
+    hint:'Start with long result = 1 (use long because factorials get big fast).\nUse for(i = 1; i <= n; i++) and multiply result by i each time.\nUse %ld to print a long.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n; <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+    <span class="type">long</span> result = <span class="num">1</span>;
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">1</span>; i<=n; i++) result *= i;
+    <span class="fn">printf</span>(<span class="str">"%d! = %ld\\n"</span>, n, result);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  // PATTERNS
+  { cat:'pattern', title:'Staircase of Stars', diff:'easy',
+    desc:'Ask the user for a number N.\nPrint a staircase shape where row 1 has 1 star, row 2 has 2 stars, and so on.',
+    input:'4', output:'*\n**\n***\n****',
+    hint:'Use two for loops.\nOuter loop: rows from 1 to N.\nInner loop: print a star i times (where i is the current row).\nAfter the inner loop, print a new line.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n; <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">1</span>; i<=n; i++){
+        <span class="kw">for</span>(<span class="type">int</span> j=<span class="num">1</span>; j<=i; j++) <span class="fn">printf</span>(<span class="str">"*"</span>);
+        <span class="fn">printf</span>(<span class="str">"\\n"</span>);
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'pattern', title:'Number Triangle', diff:'easy',
+    desc:'Ask the user for N.\nPrint a triangle where each row shows its row number repeated that many times.',
+    input:'4', output:'1\n22\n333\n4444',
+    hint:'Two loops: outer for rows (i = 1 to N), inner prints the number i exactly i times.\nAfter inner loop ends, print a new line.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n; <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">1</span>; i<=n; i++){
+        <span class="kw">for</span>(<span class="type">int</span> j=<span class="num">1</span>; j<=i; j++) <span class="fn">printf</span>(<span class="str">"%d"</span>, i);
+        <span class="fn">printf</span>(<span class="str">"\\n"</span>);
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'pattern', title:'Solid Square', diff:'easy',
+    desc:'Ask the user for N. Print a solid square of stars that is N rows tall and N columns wide.',
+    input:'3', output:'***\n***\n***',
+    hint:'Outer loop for rows (1 to N). Inner loop for columns (1 to N). Print one star each inner loop. After the inner loop, print a new line.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n; <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">1</span>; i<=n; i++){
+        <span class="kw">for</span>(<span class="type">int</span> j=<span class="num">1</span>; j<=n; j++) <span class="fn">printf</span>(<span class="str">"*"</span>);
+        <span class="fn">printf</span>(<span class="str">"\\n"</span>);
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  // 1D ARRAY
+  { cat:'array1d', title:'Store and Print Numbers', diff:'easy',
+    desc:'Ask the user how many numbers they want to store (N).\nThen ask them to enter N numbers.\nStore them in an array and print them all back on one line.',
+    input:'4\n10 20 30 40', output:'10 20 30 40',
+    hint:'Declare int arr[100].\nUse a for loop to scanf each number into arr[i].\nThen another for loop to printf each one.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n; <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+    <span class="type">int</span> arr[n];
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">0</span>;i&lt;n;i++) <span class="fn">scanf</span>(<span class="str">"%d"</span>,&amp;arr[i]);
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">0</span>;i&lt;n;i++) <span class="fn">printf</span>(<span class="str">"%d "</span>,arr[i]);
+    <span class="fn">printf</span>(<span class="str">"\\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'array1d', title:'Min, Max and Average', diff:'easy',
+    desc:'Ask the user to enter N numbers.\nFind and print the smallest, the biggest, and the average.',
+    input:'5\n3 9 1 7 5', output:'Min: 1\nMax: 9\nAvg: 5.00',
+    hint:'After reading, set min = arr[0] and max = arr[0].\nLoop through the array: if arr[i] < min then update min. If arr[i] > max then update max.\nAlso keep adding each number to a sum to calculate the average.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n; <span class="fn">scanf</span>(<span class="str">"%d"</span>,&amp;n);
+    <span class="type">int</span> a[n]; <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">0</span>;i&lt;n;i++) <span class="fn">scanf</span>(<span class="str">"%d"</span>,&amp;a[i]);
+    <span class="type">int</span> mn=a[<span class="num">0</span>], mx=a[<span class="num">0</span>]; <span class="type">float</span> sum=<span class="num">0</span>;
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">0</span>;i&lt;n;i++){
+        <span class="kw">if</span>(a[i]&lt;mn) mn=a[i];
+        <span class="kw">if</span>(a[i]&gt;mx) mx=a[i];
+        sum+=a[i];
+    }
+    <span class="fn">printf</span>(<span class="str">"Min: %d\\nMax: %d\\nAvg: %.2f\\n"</span>,mn,mx,sum/n);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'array1d', title:'Print Array Backwards', diff:'easy',
+    desc:'Ask the user for N decimal numbers.\nStore them in an array.\nThen print them in reverse order — last number first.',
+    input:'4\n1.1 2.2 3.3 4.4', output:'4.40 3.30 2.20 1.10',
+    hint:'Read all the numbers into the array first.\nThen use a for loop that starts at index n-1 and goes DOWN to 0 using i--.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n; <span class="fn">scanf</span>(<span class="str">"%d"</span>,&amp;n);
+    <span class="type">float</span> a[n];
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">0</span>;i&lt;n;i++) <span class="fn">scanf</span>(<span class="str">"%f"</span>,&amp;a[i]);
+    <span class="kw">for</span>(<span class="type">int</span> i=n-<span class="num">1</span>;i&gt;=<span class="num">0</span>;i--) <span class="fn">printf</span>(<span class="str">"%.2f "</span>,a[i]);
+    <span class="fn">printf</span>(<span class="str">"\\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  // 2D ARRAY
+  { cat:'array2d', title:'Fill and Print a 3x3 Grid', diff:'easy',
+    desc:'Ask the user to enter 9 numbers to fill a 3x3 grid (3 rows, 3 columns).\nPrint the grid so it looks like a table.',
+    input:'1 2 3\n4 5 6\n7 8 9', output:'1 2 3\n4 5 6\n7 8 9',
+    hint:'Use int a[3][3].\nTwo loops to read: outer for rows (i), inner for columns (j) — read into a[i][j].\nSame two loops to print, adding a new line after each row.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> a[<span class="num">3</span>][<span class="num">3</span>];
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">0</span>;i&lt;<span class="num">3</span>;i++) <span class="kw">for</span>(<span class="type">int</span> j=<span class="num">0</span>;j&lt;<span class="num">3</span>;j++) <span class="fn">scanf</span>(<span class="str">"%d"</span>,&amp;a[i][j]);
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">0</span>;i&lt;<span class="num">3</span>;i++){
+        <span class="kw">for</span>(<span class="type">int</span> j=<span class="num">0</span>;j&lt;<span class="num">3</span>;j++) <span class="fn">printf</span>(<span class="str">"%d "</span>,a[i][j]);
+        <span class="fn">printf</span>(<span class="str">"\\n"</span>);
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'array2d', title:'Add All Numbers in a Grid', diff:'easy',
+    desc:'Ask the user to fill a 3x3 grid of numbers.\nAdd up every single number in the grid and print the total.',
+    input:'1 2 3\n4 5 6\n7 8 9', output:'Sum: 45',
+    hint:'Two nested loops go through every cell a[i][j].\nKeep adding each value to a sum variable.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> a[<span class="num">3</span>][<span class="num">3</span>], sum=<span class="num">0</span>;
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">0</span>;i&lt;<span class="num">3</span>;i++) <span class="kw">for</span>(<span class="type">int</span> j=<span class="num">0</span>;j&lt;<span class="num">3</span>;j++) <span class="fn">scanf</span>(<span class="str">"%d"</span>,&amp;a[i][j]);
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">0</span>;i&lt;<span class="num">3</span>;i++) <span class="kw">for</span>(<span class="type">int</span> j=<span class="num">0</span>;j&lt;<span class="num">3</span>;j++) sum+=a[i][j];
+    <span class="fn">printf</span>(<span class="str">"Sum: %d\\n"</span>,sum);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'array2d', title:'Total of Each Row', diff:'med',
+    desc:'Ask the user to fill a 3x3 grid of numbers.\nPrint the total of each row separately.',
+    input:'1 2 3\n4 5 6\n7 8 9', output:'Row 1: 6\nRow 2: 15\nRow 3: 24',
+    hint:'After reading the grid, use one outer loop for each row (i).\nInside, loop through all 3 columns and add a[i][j] to a rowSum.\nReset rowSum = 0 at the START of each row.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> a[<span class="num">3</span>][<span class="num">3</span>];
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">0</span>;i&lt;<span class="num">3</span>;i++) <span class="kw">for</span>(<span class="type">int</span> j=<span class="num">0</span>;j&lt;<span class="num">3</span>;j++) <span class="fn">scanf</span>(<span class="str">"%d"</span>,&amp;a[i][j]);
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">0</span>;i&lt;<span class="num">3</span>;i++){
+        <span class="type">int</span> rs=<span class="num">0</span>;
+        <span class="kw">for</span>(<span class="type">int</span> j=<span class="num">0</span>;j&lt;<span class="num">3</span>;j++) rs+=a[i][j];
+        <span class="fn">printf</span>(<span class="str">"Row %d: %d\\n"</span>,i+<span class="num">1</span>,rs);
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  // STRUCT
+  { cat:'struct', title:'Student Info Card', diff:'easy',
+    desc:'Create a structure called Student that stores a name, an age, and a GPA (decimal number).\nAsk the user to fill in one student\'s details and print them out.',
+    input:'Maria 20 3.85', output:'Name: Maria\nAge: 20\nGPA: 3.85',
+    hint:'Define the struct OUTSIDE of main.\nInside main declare: struct Student s;\nAccess each field with a dot: s.name, s.age, s.gpa\nNo & needed for s.name because it is an array.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">struct</span> <span class="type">Student</span> {
+    <span class="type">char</span> name[<span class="num">50</span>];
+    <span class="type">int</span>  age;
+    <span class="type">float</span> gpa;
+};
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="kw">struct</span> <span class="type">Student</span> s;
+    <span class="fn">scanf</span>(<span class="str">"%s %d %f"</span>, s.name, &amp;s.age, &amp;s.gpa);
+    <span class="fn">printf</span>(<span class="str">"Name: %s\\nAge: %d\\nGPA: %.2f\\n"</span>, s.name, s.age, s.gpa);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'struct', title:'Who Scored Highest?', diff:'med',
+    desc:'Create a Student struct with a name and a marks field.\nAsk the user to enter details for 3 students.\nPrint the name and marks of the student who scored the highest.',
+    input:'Alice 88\nBob 95\nCarla 91', output:'Top student: Bob (95)',
+    hint:'Declare struct Student s[3].\nLoop to fill each one.\nThen loop again keeping track of which index has the highest marks (same idea as finding max in a 1D array).',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">struct</span> <span class="type">Student</span> { <span class="type">char</span> name[<span class="num">50</span>]; <span class="type">int</span> marks; };
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="kw">struct</span> <span class="type">Student</span> s[<span class="num">3</span>];
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">0</span>;i&lt;<span class="num">3</span>;i++) <span class="fn">scanf</span>(<span class="str">"%s %d"</span>,s[i].name,&amp;s[i].marks);
+    <span class="type">int</span> top=<span class="num">0</span>;
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">1</span>;i&lt;<span class="num">3</span>;i++) <span class="kw">if</span>(s[i].marks>s[top].marks) top=i;
+    <span class="fn">printf</span>(<span class="str">"Top student: %s (%d)\\n"</span>,s[top].name,s[top].marks);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'struct', title:'Rectangle Area and Perimeter', diff:'easy',
+    desc:'Create a struct called Rectangle that stores a width and a height (both decimal numbers).\nAsk the user for the width and height.\nPrint the area and the perimeter.\n\nArea = width x height\nPerimeter = 2 x (width + height)',
+    input:'5.0 3.0', output:'Area: 15.00\nPerimeter: 16.00',
+    hint:'Define struct Rectangle with double w and double h.\nAccess them with rect.w and rect.h.\nUse %lf to read doubles.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">struct</span> <span class="type">Rectangle</span> { <span class="type">double</span> w, h; };
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="kw">struct</span> <span class="type">Rectangle</span> r;
+    <span class="fn">scanf</span>(<span class="str">"%lf %lf"</span>,&amp;r.w,&amp;r.h);
+    <span class="fn">printf</span>(<span class="str">"Area: %.2lf\\nPerimeter: %.2lf\\n"</span>,r.w*r.h,<span class="num">2</span>*(r.w+r.h));
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  // FUNCTIONS
+  { cat:'func', title:'Add Two Numbers with a Function', diff:'easy',
+    desc:'Write a function called add that takes two whole numbers and returns their sum.\nIn main, ask the user for two numbers, call the function, and print the result.',
+    input:'8 5', output:'Sum: 13',
+    hint:'Write the function BEFORE main:\nint add(int a, int b) { return a + b; }\nIn main, call it like: result = add(x, y);',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">add</span>(<span class="type">int</span> a, <span class="type">int</span> b) { <span class="kw">return</span> a + b; }
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> x, y; <span class="fn">scanf</span>(<span class="str">"%d %d"</span>,&amp;x,&amp;y);
+    <span class="fn">printf</span>(<span class="str">"Sum: %d\\n"</span>, <span class="fn">add</span>(x,y));
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'func', title:'Power Function', diff:'easy',
+    desc:'Write a function called power that takes a base number and an exponent and returns the result.\nFor example: power(3, 4) = 81\nAsk the user for both numbers and print the result.',
+    input:'3 4', output:'3^4 = 81',
+    hint:'Inside the function: start result = 1. Use a for loop that runs exponent times, multiplying result by base each time.\nThen return result.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">power</span>(<span class="type">int</span> base, <span class="type">int</span> exp) {
+    <span class="type">int</span> result = <span class="num">1</span>;
+    <span class="kw">for</span>(<span class="type">int</span> i=<span class="num">0</span>;i&lt;exp;i++) result *= base;
+    <span class="kw">return</span> result;
+}
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> b, e; <span class="fn">scanf</span>(<span class="str">"%d %d"</span>,&amp;b,&amp;e);
+    <span class="fn">printf</span>(<span class="str">"%d^%d = %d\\n"</span>,b,e,<span class="fn">power</span>(b,e));
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'func', title:'Is It Even or Odd?', diff:'easy',
+    desc:'Write a function called isEven that takes a number and returns 1 if it is even and 0 if it is odd.\nIn main, ask the user for a number and print "Even" or "Odd".',
+    input:'7', output:'Odd',
+    hint:'In the function: return n % 2 == 0;\nThe % operator gives the remainder after dividing. If there is no remainder after dividing by 2, the number is even.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">int</span> <span class="fn">isEven</span>(<span class="type">int</span> n) { <span class="kw">return</span> n % <span class="num">2</span> == <span class="num">0</span>; }
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n; <span class="fn">scanf</span>(<span class="str">"%d"</span>,&amp;n);
+    <span class="fn">printf</span>(<span class="str">"%s\\n"</span>, <span class="fn">isEven</span>(n) ? <span class="str">"Even"</span> : <span class="str">"Odd"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+
+  { cat:'func', title:'Recursive Factorial', diff:'med',
+    desc:'Write a function called factorial that calls itself (this is called recursion) to calculate N!\nAsk the user for N and print the result.\n\nExample: factorial(5) = 5 x 4 x 3 x 2 x 1 = 120',
+    input:'6', output:'6! = 720',
+    hint:'Base case: if n is 0 or 1, return 1 (stop here).\nOtherwise: return n * factorial(n - 1)\nThe function keeps calling itself with a smaller number each time until it hits the base case.',
+    sol:`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="type">long</span> <span class="fn">factorial</span>(<span class="type">int</span> n) {
+    <span class="kw">if</span>(n <= <span class="num">1</span>) <span class="kw">return</span> <span class="num">1</span>;
+    <span class="kw">return</span> n * <span class="fn">factorial</span>(n - <span class="num">1</span>);
+}
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n; <span class="fn">scanf</span>(<span class="str">"%d"</span>,&amp;n);
+    <span class="fn">printf</span>(<span class="str">"%d! = %ld\\n"</span>,n,<span class="fn">factorial</span>(n));
+    <span class="kw">return</span> <span class="num">0</span>;
+}`},
+];
+
+const labels = { io:'I/O', math:'Math', if:'if/else', switch:'switch', while:'while', dowhile:'do-while', for:'for', pattern:'pattern', array1d:'1D array', array2d:'2D array', struct:'struct', func:'function' };
+const diffC  = { easy:'tag-diff-easy', med:'tag-diff-med', hard:'tag-diff-hard' };
+const catOrder = ['io','math','if','switch','while','dowhile','for','pattern','array1d','array2d','struct','func'];
+Q.forEach((q,i) => q.num = i+1);
+
+function render(f='all'){
+  const main = document.getElementById('main');
+  main.innerHTML=''; let count=0;
+  catOrder.forEach(cat=>{
+    const list = Q.filter(q=>q.cat===cat&&(f==='all'||q.cat===f));
+    if(!list.length) return;
+    const sec=document.createElement('div');
+    sec.innerHTML=`<div class="section-title">${labels[cat]}</div>`;
+    list.forEach(q=>{
+      count++;
+      sec.innerHTML+=`
+      <div class="card" id="card-${q.num}">
+        <div class="card-header" onclick="tog(${q.num})">
+          <div class="q-meta">
+            <span class="q-num">#${q.num}</span>
+            <span class="q-title">${q.title}</span>
+            <span class="tag tag-type">${labels[q.cat]}</span>
+            <span class="tag ${diffC[q.diff]}">${q.diff}</span>
+          </div>
+          <span class="toggle-icon">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="problem-desc">${q.desc.replace(/\n/g,'<br>')}</div>
+          <div class="io-section">
+            <div class="io-box"><h4>Sample Input</h4><pre>${q.input}</pre></div>
+            <div class="io-box"><h4>Expected Output</h4><pre>${q.output}</pre></div>
+          </div>
+          <button class="hint-btn" onclick="togHint(${q.num})">💡 Show Hint</button>
+          <div class="hint-box" id="hint-${q.num}">${q.hint.replace(/\n/g,'<br>')}</div>
+          <button class="solution-btn" onclick="togSol(${q.num})">{ } Show Solution</button>
+          <div class="solution-box" id="sol-${q.num}">
+            <div class="sol-header">solution.c</div>
+            <pre>${q.sol}</pre>
+          </div>
+          <div class="checker-wrap">
+            <div class="checker-header"><span>📋 Paste your code here and click Check</span></div>
+            <textarea class="checker-textarea" id="code-${q.num}" placeholder="// Write or paste your C code here..."></textarea>
+            <div class="checker-footer">
+              <button class="check-btn" id="cbtn-${q.num}" onclick="checkCode(${q.num})">▶ Check Code</button>
+              <button class="clear-btn" onclick="clearCode(${q.num})">Clear</button>
+            </div>
+          </div>
+          <div class="check-result" id="res-${q.num}"></div>
+        </div>
+      </div>`;
+    });
+    main.appendChild(sec);
+  });
+  document.getElementById('count-badge').textContent=count;
+}
+
+function tog(n){ document.getElementById('card-'+n).classList.toggle('open'); }
+function togHint(n){ document.getElementById('hint-'+n).classList.toggle('show'); }
+function togSol(n){ document.getElementById('sol-'+n).classList.toggle('show'); }
+function clearCode(n){
+  document.getElementById('code-'+n).value='';
+  const r=document.getElementById('res-'+n);
+  r.className='check-result'; r.innerHTML='';
+}
+function filter(cat,e){
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  e.target.classList.add('active');
+  render(cat);
+}
+async function checkCode(n){
+  const code=document.getElementById('code-'+n).value.trim();
+  if(!code) return;
+  const q=Q.find(q=>q.num===n);
+  const btn=document.getElementById('cbtn-'+n);
+  const res=document.getElementById('res-'+n);
+  btn.disabled=true; btn.textContent='⏳ Checking...';
+  res.className='check-result loading show';
+  res.innerHTML='<div class="result-title">Checking your code...</div>';
+  const prompt=`You are a C programming tutor checking a 1st year student's code.
+
+QUESTION: "${q.title}"
+TASK: ${q.desc}
+SAMPLE INPUT: ${q.input}
+EXPECTED OUTPUT: ${q.output}
+
+STUDENT CODE:
+\`\`\`c
+${code}
+\`\`\`
+
+Is this code correct? Reply ONLY in this exact JSON with no extra text:
+{"verdict":"correct or incorrect","summary":"one short sentence","details":"2-3 sentences. If correct, say what they did well. If wrong, explain the mistake clearly in simple terms a beginner can understand, and say exactly how to fix it."}`;
+  try{
+    const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
+    const data=await resp.json();
+    const txt=data.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim();
+    const p=JSON.parse(txt);
+    const good=p.verdict==='correct';
+    res.className='check-result show '+(good?'good':'bad');
+    res.innerHTML=`<div class="result-title">${good?'✅ CODE GOOD':'❌ CODE BAD'}</div><div class="result-detail"><strong>${p.summary}</strong>\n\n${p.details}</div>`;
+  }catch(e){
+    res.className='check-result show bad';
+    res.innerHTML='<div class="result-title">⚠️ Error</div><div class="result-detail">Could not check. Try again.</div>';
+  }
+  btn.disabled=false; btn.textContent='▶ Check Code';
+}
+render();
+</script>
+</body>
+</html>
